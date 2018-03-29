@@ -20,7 +20,7 @@ class Reptile(object):
         return_excel= ExcelUtils.create_excel(sheet_name, self.rows_title)
         self.excel = return_excel[0]
         self.sheet_table = return_excel[1]
-        self.job_info = []
+        self.job_info = []   #存放职位信息，存入excel中
         self.count = 0      #excel 表格第一行开始
 
     def reptile_data(self):
@@ -30,7 +30,11 @@ class Reptile(object):
             time.sleep(1)
 
     def request_job_list(self, page_url):
-
+        '''
+        请求工作列表方法
+        :param page_url:
+        :return:
+        '''
         try:
             headers = {
                 'Referer': 'http://www.liepin.com/',
@@ -47,11 +51,19 @@ class Reptile(object):
 
     @abc.abstractmethod
     def parse_job_list(self, text):
-
+        '''
+        解析工作列表抽象方法
+        :param text:
+        :return:
+        '''
         pass
 
     def request_job_detail(self, job_href):
-
+        '''
+        获取工作详情页面
+        :param job_href:
+        :return:
+        '''
         try:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.104 Safari/537.36 Core/1.53.4549.400 QQBrowser/9.7.12900.400'
