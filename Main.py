@@ -2,7 +2,9 @@
 
 from ReptileXpath import  ReptileXpath
 
-
+'''
+爬虫入口
+'''
 class Main(object):
 
     @staticmethod
