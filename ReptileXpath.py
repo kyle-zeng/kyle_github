@@ -4,13 +4,13 @@ from lxml import etree
 from ExcelUtils import ExcelUtils
 from Reptile import Reptile
 import time
-from EmailUtils import EmailUtils
+from ReptileException import ReptileException
 
 
 class ReptileXpath(Reptile):
 
     def __init__(self):
-        super(ReptileXpath ,self).__init__()
+        super(ReptileXpath, self).__init__()
 
     def parse_job_list(self, text):
         try:
@@ -38,7 +38,7 @@ class ReptileXpath(Reptile):
                 '''
                 获取公司信息
               '''
-                company_info = li.xpath('./div[@class="sojob-item-main clearfix"]/div[@class="company-info nohover"]')
+                company_info = li.xpath('./li/div[@class="sojob-item-main clearfix"]/div[@class="company-info nohover"]')
                 company_name = company_info[0].xpath('./p[1]/a/text()')              # 公司名称
                 company_tag = company_info[0].xpath('./p[2]/span/a/text()')         # 所属行业
                 company_welfares = company_info[0].xpath('./p[@class="temptation clearfix"]/span')  # 公司福利
@@ -63,10 +63,12 @@ class ReptileXpath(Reptile):
                 # 获取职位详情页
                 self.request_job_detail(job_href)
                 time.sleep(1)
-        except Exception as e:
-            print '\n\n出现错误,错误信息是:{}\n\n'.format(e.message)
-            EmailUtils.send_mail(e.message)   # 发邮件后怎么退出
-
+        except ReptileException as e1:
+            raise e1
+        except Exception as e2:
+            # 异常抛出调用处处理
+            ex = ReptileException('parse_job_list 解析职位列表异常，异常信息：{}'.format(e2.message))
+            raise ex
 
     def parse_job_detail(self, text):
         '''
@@ -83,14 +85,15 @@ class ReptileXpath(Reptile):
             else:
                 job_statement = '暂无职位描述'
         except Exception as e:
-            print '\n\n出现错误,错误信息是:{}\n\n'.format(e.message)
             job_statement = '暂无描述'
+            ex = ReptileException('parse_job_detail 解析职位详情异常，异常信息：{}'.format(e.message))
+            raise ex
 
         self.job_info.append(job_statement)
         self.count = self.count + 1
-        # 写入excel
+        #  写入excel
         ExcelUtils.write_excel(self.excel, self.sheet_table, self.count, self.job_info, u'xpath_liepinjob.xlsx')
         print '采集了{}条信息'.format(self.count)
-        # 清空工作信息，便于下次使用
+        #  清空工作信息，便于下次使用
         self.job_info = []
         pass

@@ -4,12 +4,15 @@ import time
 import abc
 import requests
 from ExcelUtils import ExcelUtils
+from EmailUtils import EmailUtils
+from ReptileException import ReptileException
 
 '''
 爬虫的抽象类
 主要实现网页内容的获取方法
 
 '''
+
 
 class Reptile(object):
     __metaclass__ = abc.ABCMeta
@@ -20,14 +23,21 @@ class Reptile(object):
         return_excel= ExcelUtils.create_excel(sheet_name, self.rows_title)
         self.excel = return_excel[0]
         self.sheet_table = return_excel[1]
-        self.job_info = []   #存放职位信息，存入excel中
-        self.count = 0      #excel 表格第一行开始
+        self.job_info = []   # 存放职位信息，存入excel中
+        self.count = 0      # excel 表格第一行开始
 
     def reptile_data(self):
-        for i in range(0, 3):
-            url = 'https://www.liepin.com/zhaopin/?pubTime=&ckid=4ceacca0e5e9d678&fromSearchBtn=2&compkind=&isAnalysis=&init=-1&searchType=1&dqs=&industryType=&jobKind=&sortFlag=15&degradeFlag=0&industries=&salary=&compscale=&key=python&clean_condition=&headckid=4ceacca0e5e9d678&d_pageSize=40&siTag=I-7rQ0e90mv8a37po7dV3Q~fA9rXquZc5IkJpXC-Ycixw&d_headId=46e2616195974a554a49b7da5aa02a91&d_ckId=46e2616195974a554a49b7da5aa02a91&d_sfrom=search_industry&d_curPage={0}&curPage={1}'.format(i,i+1)
-            self.request_job_list(url)
-            time.sleep(1)
+        try:
+            for i in range(0, 3):
+                url = 'https://www.liepin.com/zhaopin/?pubTime=&ckid=4ceacca0e5e9d678&fromSearchBtn=2&compkind=&isAnalysis=&init=-1&searchType=1&dqs=&industryType=&jobKind=&sortFlag=15&degradeFlag=0&industries=&salary=&compscale=&key=python&clean_condition=&headckid=4ceacca0e5e9d678&d_pageSize=40&siTag=I-7rQ0e90mv8a37po7dV3Q~fA9rXquZc5IkJpXC-Ycixw&d_headId=46e2616195974a554a49b7da5aa02a91&d_ckId=46e2616195974a554a49b7da5aa02a91&d_sfrom=search_industry&d_curPage={0}&curPage={1}'.format(i,i+1)
+                self.request_job_list(url)
+                time.sleep(1)
+        except ReptileException as e1:
+            print '\n\n出现错误,错误信息是:{}\n\n'.format(e1.message)
+            EmailUtils.send_mail(e1.message)
+        except Exception as e:
+            print '\n\n出现错误,错误信息是:{}\n\n'.format(e.message)
+            EmailUtils.send_mail(e.message)
 
     def request_job_list(self, page_url):
         '''
@@ -41,13 +51,17 @@ class Reptile(object):
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.104 Safari/537.36 Core/1.53.4549.400 QQBrowser/9.7.12900.400'
             }
             response = requests.get(page_url, headers=headers)
-            #response.encoding = 'gbk'
+            # response.encoding = 'gbk'
 
             if response.status_code != 200:
                 return
             self.parse_job_list(response.text)
+        except ReptileException as e1:
+            raise e1
         except Exception as e:
-            print '\n\n出现错误,错误信息是:{}\n\n'.format(e.message)
+            # 异常抛出调用处处理
+            ex = ReptileException('request_job_list 获取职位列表异常，异常信息：{}'.format(e.message))
+            raise ex
 
     @abc.abstractmethod
     def parse_job_list(self, text):
@@ -74,9 +88,11 @@ class Reptile(object):
                 return ''
 
             self.parse_job_detail(response.text)
-
+        except ReptileException as e1:
+            raise e1
         except Exception as e:
-            print '\n\n获取工作详情出现错误，错误信息如下：{}\n\n'.format(e.message)
+            ex = ReptileException('request_job_detail 获取工作详情出现错误，错误信息如下：{}'.format(e.message))
+            raise ex
 
     @abc.abstractmethod
     def parse_job_detail(self, text):
