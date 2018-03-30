@@ -38,7 +38,7 @@ class ReptileXpath(Reptile):
                 '''
                 获取公司信息
               '''
-                company_info = li.xpath('./li/div[@class="sojob-item-main clearfix"]/div[@class="company-info nohover"]')
+                company_info = li.xpath('./div[@class="sojob-item-main clearfix"]/div[@class="company-info nohover"]')
                 company_name = company_info[0].xpath('./p[1]/a/text()')              # 公司名称
                 company_tag = company_info[0].xpath('./p[2]/span/a/text()')         # 所属行业
                 company_welfares = company_info[0].xpath('./p[@class="temptation clearfix"]/span')  # 公司福利
